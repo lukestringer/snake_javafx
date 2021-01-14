@@ -1,33 +1,87 @@
-import javafx.scene.control.Button;
-import javafx.scene.layout.StackPane;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class View {
 
     private Model _model;
-    private StackPane stackPane;
-    private Rectangle snake;
+    private Group root;
+    private LinkedList<Rectangle> snake;
+    private Rectangle apple;
     private int segmentHeight, segmentWidth; //size of snake segments
 
+    private static final Color snakeColor = Color.LAWNGREEN;
+    private static final Color appleColor = Color.RED;
+    private Scene scene;
+
     public View(Model model, int gameStageWidth, int gameStageHeight) {
+
         _model = model;
         //get how big each grid segment will be from the game stage size and grid size
         segmentWidth = gameStageWidth / _model.getColumns();
         segmentHeight = gameStageHeight / _model.getRows();
-        stackPane = new StackPane();
+        root = new Group();
+
+        addSnake();
+        addApple();
+
+        scene = new Scene(root, gameStageWidth, gameStageHeight, Color.BLACK);
+
 
     }
 
+    private void addApple() {
+        apple = addSegment(_model.getApple(), appleColor);
+    }
 
-    public StackPane getRootNode() {
-        return stackPane;
+    private void addSnake() {
+        snake = new LinkedList<>();
+        List<int[]> coords = _model.getSnake();
+        for (int[] coord : coords) {
+            snake.addLast(addSegment(coord, snakeColor));
+        }
+    }
+
+    private Rectangle addSegment(int[] coords, Color color) {
+        //resize from grid coordinates to stage coordinates
+        int y = coords[0] * segmentHeight;
+        int x = coords[1] * segmentWidth;
+
+        //currently, rectangles don't quite fill up their segment (I think it looks better)
+        Rectangle segment = new Rectangle(x, y, segmentWidth - 5, segmentHeight - 5);
+        segment.setFill(color);
+        root.getChildren().add(segment);
+        return segment;
+    }
+
+    public void moveSnake(boolean appleEaten) {
+        //remove tail
+        Rectangle tailEnd = snake.removeLast();
+        root.getChildren().remove(tailEnd);
+
+        //add new head position
+        Rectangle head = addSegment(_model.getHead(), snakeColor);
+        snake.addFirst(head);
     }
 
     /*public void updateButtonNumber(Integer newNumber) {
         button.setText("Button clicked: " + newNumber);
+    }*/
+
+    public void addMoveActionHandler(EventHandler<KeyEvent> actionHandler) {
+        scene.setOnKeyPressed(actionHandler);
     }
 
-    public void addActionHandler(Contoller.ActionHandler actionHandler) {
-        button.setOnAction(actionHandler);
-    }*/
+    /* -------------------- GETTERS -------------------- */
+
+    public Scene getScene() {
+        return scene;
+    }
 }

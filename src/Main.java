@@ -1,6 +1,7 @@
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Main extends Application {
@@ -19,7 +20,7 @@ public class Main extends Application {
         new Contoller(view, model);
 
         String title = "Snake";
-        stage.setScene(new Scene(view.getRootNode(), gameStageWidth, gameStageHeight));
+        stage.setScene(view.getScene());
         stage.setResizable(false);//maybe one day: resizeable game window
         //set up scene further here e.g. min height
         stage.setTitle(title);
