@@ -1,15 +1,13 @@
+package GUI;
+
 import com.sun.javaws.exceptions.InvalidArgumentException;
+import com.sun.xml.internal.ws.resources.UtilMessages;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-enum Direction {
-    RIGHT,
-    DOWN,
-    LEFT,
-    UP
-}
+
 
 public class Model {
     private final int columns, rows;//grid dimensions
@@ -81,11 +79,14 @@ public class Model {
                 //throw UnexpectedItemInBaggingAreaException
         }
         //check for collision
-        if (snake.contains(newHead)) {
-            //collision
-            System.out.println("Collision!");
-            return null;
+        for (int[] segment : snake) {
+            if (segment[0] == newHead[0] && segment[1] == newHead[1]) {
+                //collision
+                System.out.println("Collision!");
+                return null;
+            }
         }
+
         //add new head position to snake
         snake.addFirst(newHead);
         //If no apple was eaten, remove the end of the snake to keep length the same
@@ -96,14 +97,31 @@ public class Model {
     }
 
     /**
-     * Changes the snake head's direction to the one provided.
-     * Provided direction should be one of RIGHT, DOWN, LEFT, UP (0,1,2,3)
+     * Changes the snake head's direction to the one provided as long as it is valid.
+     * (e.g. cannot go from RIGHT to LEFT)
      *
      * @param newDirection
      *              int describing new snake direction: RIGHT, DOWN, LEFT, UP (0,1,2,3)
      */
     public void setDirection(Direction newDirection) {
-        direction = newDirection;
+        if (isNewDirectionValid(direction, newDirection)) {
+            direction = newDirection;
+        }
+    }
+
+    /**
+     * Finds if the new direction is valid compared to the old one.
+     * The new direction must not be opposite to the old one.
+     *
+     * @param oldDirection
+     *                  The direction the snake is currently going
+     * @param newDirection
+     *                  The direction the snake wants to take now
+     * @return
+     *                  true if the new direction is valid and false otherwise
+     */
+    private boolean isNewDirectionValid(Direction oldDirection, Direction newDirection) {
+        return oldDirection.opposite != newDirection;
     }
 
 
@@ -127,5 +145,27 @@ public class Model {
 
     public int[] getHead() {
         return getSnake().getFirst();
+    }
+
+    /* -------------------- enum -------------------- */
+
+    public enum Direction {
+        RIGHT,
+        DOWN,
+        LEFT,
+        UP;
+
+        private Direction opposite;
+
+        static {
+            RIGHT.opposite = LEFT;
+            LEFT.opposite = RIGHT;
+            DOWN.opposite = UP;
+            UP.opposite = DOWN;
+        }
+
+        public Direction getOpposite() {
+            return opposite;
+        }
     }
 }

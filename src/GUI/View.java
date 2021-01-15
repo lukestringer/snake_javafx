@@ -1,4 +1,5 @@
-import javafx.event.ActionEvent;
+package GUI;
+
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -62,9 +63,11 @@ public class View {
     }
 
     public void moveSnake(boolean appleEaten) {
-        //remove tail
-        Rectangle tailEnd = snake.removeLast();
-        root.getChildren().remove(tailEnd);
+        if (!appleEaten) {
+            //remove tail
+            Rectangle tailEnd = snake.removeLast();
+            root.getChildren().remove(tailEnd);
+        }
 
         //add new head position
         Rectangle head = addSegment(_model.getHead(), snakeColor);
@@ -83,5 +86,11 @@ public class View {
 
     public Scene getScene() {
         return scene;
+    }
+
+    public void endGame() {
+        for (Rectangle segment : snake) {
+            segment.setFill(Color.DARKGREEN);
+        }
     }
 }

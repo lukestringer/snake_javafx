@@ -1,7 +1,8 @@
 
+import GUI.Contoller;
+import GUI.Model;
+import GUI.View;
 import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Main extends Application {
