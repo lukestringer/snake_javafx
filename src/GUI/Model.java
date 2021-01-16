@@ -10,10 +10,15 @@ import java.util.List;
 
 
 public class Model {
+    //multiplier for current delay on apple eaten
+    //muck around with it to make game harder or easier
+    private static final double difficulty = 0.975;//todo suddenly game seems a lot slower... is it because I'm replacing the timeline?
+
     private final int columns, rows;//grid dimensions
     private LinkedList<int[]> snake; //snake as linked list of row and columns
     private int[] apple;//apple position stored as row, column
     private Direction direction;//the direction the snake is heading
+    private double delay;//delay between frames in milliseconds
 
     //constants for accessing coordinates from int[]
     private static final int ROW = 0;
@@ -21,8 +26,9 @@ public class Model {
 
     public Model() {
         columns = rows = 10;
-
         direction = Direction.RIGHT;//default starting direction
+        delay = 500;//start with delay of 500 milliseconds
+
         addSnake();
         addApple();
     }
@@ -93,6 +99,7 @@ public class Model {
         //If an apple was eaten, make a new apple somewhere else
         if (appleEaten) {
             newApple();
+            delay *= difficulty;
         }
 
         //Return if apple was eaten
@@ -179,6 +186,10 @@ public class Model {
 
     public int[] getHead() {
         return getSnake().getFirst();
+    }
+
+    public double getDelay() {
+        return delay;//todo move to getters
     }
 
     /* -------------------- enum -------------------- */

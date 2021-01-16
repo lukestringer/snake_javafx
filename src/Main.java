@@ -37,5 +37,7 @@ public class Main extends Application {
         //todo 4 implement a reset button
         //todo 5 implement a score (with options, so time take reduces score to increase riskier play)
         //todo 6 MAYBE - make ai player (beating game with full screen snake, doing the same with fastest play, having ai for player to vs that loses sometimes)
+
+        //todo refactor code structure. start by looking at that textbook from csse2002, the mvc section
     }
 }

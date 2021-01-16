@@ -14,8 +14,6 @@ public class Contoller {
 
     Model _model;
     View _view;
-    Timeline timeline;
-    private int delay;//delay in milliseconds between each frame
     KeyEvent directionAction;
 
     public Contoller(View view, Model model) {
@@ -27,11 +25,7 @@ public class Contoller {
     }
 
     private void startGame() {
-        delay = 500;
-        KeyFrame keyFrame = new KeyFrame(Duration.millis(delay), new MoveActionHandler());
-        timeline = new Timeline(keyFrame);
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.play();
+        _view.addTimeline(_model.getDelay(), new MoveActionHandler());
     }
 
     private class MoveActionHandler implements EventHandler<ActionEvent> {
@@ -54,7 +48,6 @@ public class Contoller {
             if (appleEaten != null) {
                 _view.moveSnake(appleEaten);
             } else {
-                timeline.stop();
                 _view.endGame();
             }
         }

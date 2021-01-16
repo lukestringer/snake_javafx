@@ -1,11 +1,16 @@
 package GUI;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,9 +19,11 @@ public class View {
 
     private Model _model;
     private Group root;
+    Timeline timeline;//timeline for the game - allows for moving and key captures
     private LinkedList<Rectangle> snake;
     private Rectangle apple;
     private int segmentHeight, segmentWidth; //size of snake segments
+    private EventHandler<ActionEvent> _moveActionHandler;
 
     private static final Color snakeColor = Color.LAWNGREEN;
     private static final Color appleColor = Color.RED;
@@ -70,11 +77,21 @@ public class View {
         } else {
             //move apple to new position
             moveApple();
+            //speed up game
+            speedUp();
         }
 
         //add new head position
         Rectangle head = addSegment(_model.getHead(), snakeColor);
         snake.addFirst(head);
+    }
+
+    private void speedUp() {
+        timeline.stop();
+        KeyFrame keyFrame = new KeyFrame(Duration.millis(_model.getDelay()), _moveActionHandler);
+        timeline = new Timeline(keyFrame);
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
     }
 
     private void moveApple() {
@@ -98,8 +115,17 @@ public class View {
     }
 
     public void endGame() {
+        timeline.stop();
         for (Rectangle segment : snake) {
             segment.setFill(Color.DARKGREEN);
         }
+    }
+
+    public void addTimeline(double delay, EventHandler<ActionEvent> moveActionHandler) {
+        _moveActionHandler = moveActionHandler;//fixme this sucks
+        KeyFrame keyFrame = new KeyFrame(Duration.millis(delay), moveActionHandler);
+        timeline = new Timeline(keyFrame);
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
     }
 }
