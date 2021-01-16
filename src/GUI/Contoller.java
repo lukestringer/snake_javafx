@@ -14,7 +14,6 @@ public class Contoller {
 
     Model _model;
     View _view;
-    //todo should timeline and delay be in model?
     Timeline timeline;
     private int delay;//delay in milliseconds between each frame
     KeyEvent directionAction;
@@ -58,14 +57,6 @@ public class Contoller {
                 timeline.stop();
                 _view.endGame();
             }
-            //
-
-            //todo speed up game each apple
-            //https://stackoverflow.com/questions/19549852/javafx-binding-timelines-duration-to-a-property
-            /*if (appleEaten) {
-                delay -= 100;
-                timeline.setDelay(Duration.millis(delay));
-            }*/
         }
     }
 

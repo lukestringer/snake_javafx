@@ -48,7 +48,6 @@ public class Model {
         //start apple near the top right corner
         apple[ROW] = 1;
         apple[COLUMN] = columns - 2;
-        //todo make place apple is added random (checking for placing on snake tail)
     }
 
     /**
@@ -79,21 +78,56 @@ public class Model {
                 //throw UnexpectedItemInBaggingAreaException
         }
         //check for collision
-        for (int[] segment : snake) {
-            if (segment[0] == newHead[0] && segment[1] == newHead[1]) {
-                //collision
-                System.out.println("Collision!");
-                return null;
-            }
+        if (collision(newHead)) {
+            System.out.println("Collision!");
+            collision(newHead);
+            return null;
         }
 
         //add new head position to snake
         snake.addFirst(newHead);
+        //check if apple was eaten
+        boolean appleEaten = Arrays.equals(apple, newHead);
         //If no apple was eaten, remove the end of the snake to keep length the same
-        if (!Arrays.equals(apple, newHead)) snake.removeLast();
+        if (!appleEaten) snake.removeLast();
+        //If an apple was eaten, make a new apple somewhere else
+        if (appleEaten) {
+            newApple();
+        }
 
         //Return if apple was eaten
-        return Arrays.equals(apple, newHead);
+        return appleEaten;
+    }
+
+    /**
+     * Checks if the provided coordinates match the snake's, meaning they collide with the snake.
+     *
+     * @param toCheck
+     *              the integer array containing the row and column to check
+     * @return
+     *              true if there is a collision, false otherwise
+     */
+    private boolean collision(int[] toCheck) {
+        for (int[] segment : snake) {
+            if (segment[ROW] == toCheck[ROW] && segment[COLUMN] == toCheck[COLUMN]) {
+                //collision
+                System.out.println("Collision!");
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private void newApple() {
+        //generate random coordinates for new apple position,
+        // checking they don't collide with snake
+        int[] newApple;
+        do {
+            newApple = new int[] {(int) (Math.random() * rows), (int) (Math.random() * columns)};
+        } while (collision(newApple));
+        //update apple
+        apple = newApple;
     }
 
     /**

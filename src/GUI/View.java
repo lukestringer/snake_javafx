@@ -67,11 +67,20 @@ public class View {
             //remove tail
             Rectangle tailEnd = snake.removeLast();
             root.getChildren().remove(tailEnd);
+        } else {
+            //move apple to new position
+            moveApple();
         }
 
         //add new head position
         Rectangle head = addSegment(_model.getHead(), snakeColor);
         snake.addFirst(head);
+    }
+
+    private void moveApple() {
+        int[] appleCoords = _model.getApple();
+        apple.setY(appleCoords[0] * segmentHeight);
+        apple.setX(appleCoords[1] * segmentWidth);
     }
 
     /*public void updateButtonNumber(Integer newNumber) {

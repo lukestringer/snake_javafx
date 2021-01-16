@@ -27,5 +27,9 @@ public class Main extends Application {
         stage.setTitle(title);
 
         stage.show();
+
+
+        //todo speed up after each apple by stopping old timeline and replacing with faster one (should timeline and delay be in model, view, or controller?)
+        //https://stackoverflow.com/questions/19549852/javafx-binding-timelines-duration-to-a-property
     }
 }
