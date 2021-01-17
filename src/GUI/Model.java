@@ -191,6 +191,14 @@ public class Model {
         return delay;//todo move to getters
     }
 
+    public void reset() {
+        direction = Direction.RIGHT;//default starting direction
+        delay = 500;//start with delay of 500 milliseconds
+
+        addSnake();
+        addApple();
+    }
+
     /* -------------------- enum -------------------- */
 
     public enum Direction {

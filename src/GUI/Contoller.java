@@ -5,6 +5,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.util.Duration;
 
@@ -58,7 +59,12 @@ public class Contoller {
 
         @Override
         public void handle(KeyEvent event) {
-            directionAction = event;
+            if (event.getCode() == KeyCode.R) {
+                _model.reset();
+                _view.reset();
+            } else {
+                directionAction = event;
+            }
         }
     }
 }
