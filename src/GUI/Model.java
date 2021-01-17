@@ -83,15 +83,6 @@ public class Model {
                 System.out.println("--- moveHead() - bad value for head direction? ---");
                 //throw UnexpectedItemInBaggingAreaException
         }
-        //check for collision
-        if (collision(newHead)) {
-            System.out.println("Collision!");
-            collision(newHead);
-            return null;
-        }
-
-        //add new head position to snake
-        snake.addFirst(newHead);
         //check if apple was eaten
         boolean appleEaten = Arrays.equals(apple, newHead);
         //If no apple was eaten, remove the end of the snake to keep length the same
@@ -101,6 +92,14 @@ public class Model {
             newApple();
             delay *= difficulty;
         }
+        //check for collision
+        if (collision(newHead)) {
+            System.out.println("Collision!");
+            collision(newHead);
+            return null;
+        }
+        //add new head position to snake
+        snake.addFirst(newHead);
 
         //Return if apple was eaten
         return appleEaten;
