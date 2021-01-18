@@ -7,6 +7,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import GUI.Model.Direction;
@@ -17,12 +18,12 @@ public class Contoller {
     View _view;
     KeyEvent directionAction;
 
-    public Contoller(View view, Model model) {
-        _model = model;
+    public Contoller(Stage stage/*View view, Model model*/) {
+        /*_model = model;
         _view = view;
         view.addMoveActionHandler(new DirectionActionHandler());
 
-        startGame();
+        startGame();*/
     }
 
     private void startGame() {
