@@ -1,205 +1,104 @@
 package GUI;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
-import com.sun.xml.internal.ws.resources.UtilMessages;
-
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
-
-
 
 public class Model {
-    //multiplier for current delay on apple eaten
-    //muck around with it to make game harder or easier
-    private static final double difficulty = 0.975;//todo suddenly game seems a lot slower... is it because I'm replacing the timeline?
 
-    private final int columns, rows;//grid dimensions
-    private LinkedList<int[]> snake; //snake as linked list of row and columns
-    private int[] apple;//apple position stored as row, column
-    private Direction direction;//the direction the snake is heading
-    private double delay;//delay between frames in milliseconds
+    private final static byte ROWS = 10;
+    private final static byte COLUMNS = 10;
 
-    //constants for accessing coordinates from int[]
-    private static final int ROW = 0;
-    private static final int COLUMN = 1;
+    private LinkedList<Coordinates> snake;
+    private Coordinates apple;
+    private Direction direction;
+    private int gameSpeed;//milliseconds between moves
+    private boolean justEaten;//did the snake eat an apple on the most recent move?
+    private boolean collision;//did the snake collide on the most recent move?
+
 
     public Model() {
-        columns = rows = 10;
-        direction = Direction.RIGHT;//default starting direction
-        delay = 500;//start with delay of 500 milliseconds
-
-        addSnake();
-        addApple();
+        resetGame();
     }
 
     /**
-     * Initialise snake with default starting positions.
+     * Sets up the default game state.
+     * Affects all the private, non-static, non-final variables.
      */
-    private void addSnake() {
+    public void resetGame() {
         snake = new LinkedList<>();
-
-        //start snake head close to board center
+        direction = Direction.RIGHT;
         for (int i = 0; i < 3; i++) {
-            int[] tailPiece = {rows/2 - 1, columns/2 - 2 - i};
-            snake.addLast(tailPiece);
+            snake.addLast(new Coordinates((byte)(ROWS/2), (byte)(COLUMNS/2 - i)));
+        }
+        apple = new Coordinates((byte) (ROWS/2), (byte) (COLUMNS - 2));
+        gameSpeed = 1000;//set to 1000 milliseconds between snake movements
+        justEaten = false;
+        collision = false;
+    }
+
+    public void moveSnake() {
+        Coordinates newHead = getNewHead();
+        justEaten = newHead.equals(apple);
+        if (justEaten) {
+            newApple();
+        } else {
+            snake.removeLast();
+        }
+        collision = checkCollision(newHead);
+        if (!collision) {
+            snake.addFirst(newHead);
         }
     }
 
-    /**
-     * Add apple to the grid with default starting position.
-     */
-    private void addApple() {
-        apple = new int[2];
-        //start apple near the top right corner
-        apple[ROW] = 1;
-        apple[COLUMN] = columns - 2;
-    }
-
-    /**
-     * Moves snake in the direction it's facing. Will wrap around board if on edge.
-     *
-     * @return
-     *       true if apple eaten, false if apple not eaten, null if snake collision
-     */
-    public Boolean moveSnake() {
-        //update head position
-        int[] oldHead = snake.getFirst();
-        int[] newHead = oldHead.clone();
+    private Coordinates getNewHead() {
+        Coordinates oldHead = snake.getFirst();
+        Coordinates newHead = new Coordinates(oldHead);
         switch (direction) {
             case RIGHT:
-                newHead[COLUMN] = (oldHead[COLUMN] + 1) % columns;
+                newHead.setColumn((byte) ((oldHead.column() + 1) % COLUMNS));
                 break;
             case DOWN:
-                newHead[ROW] = (oldHead[ROW] + 1) % rows;
+                newHead.setRow((byte) ((oldHead.row() + 1) % ROWS));
                 break;
             case LEFT:
-                newHead[COLUMN] = (oldHead[COLUMN] - 1 + columns) % columns;
+                newHead.setColumn((byte) ((oldHead.column() - 1 + COLUMNS) % COLUMNS));
                 break;
             case UP:
-                newHead[ROW] = (oldHead[ROW] - 1 + rows) % rows;
+                newHead.setRow((byte) ((oldHead.row() - 1 + ROWS) % ROWS));
                 break;
             default:
                 System.out.println("--- moveHead() - bad value for head direction? ---");
                 //throw UnexpectedItemInBaggingAreaException
         }
-        //check if apple was eaten
-        boolean appleEaten = Arrays.equals(apple, newHead);
-        //If no apple was eaten, remove the end of the snake to keep length the same
-        if (!appleEaten) snake.removeLast();
-        //If an apple was eaten, make a new apple somewhere else
-        if (appleEaten) {
-            newApple();
-            delay *= difficulty;
-        }
-        //check for collision
-        if (collision(newHead)) {
-            System.out.println("Collision!");
-            collision(newHead);
-            return null;
-        }
-        //add new head position to snake
-        snake.addFirst(newHead);
-
-        //Return if apple was eaten
-        return appleEaten;
+        return newHead;
     }
 
-    /**
-     * Checks if the provided coordinates match the snake's, meaning they collide with the snake.
-     *
-     * @param toCheck
-     *              the integer array containing the row and column to check
-     * @return
-     *              true if there is a collision, false otherwise
-     */
-    private boolean collision(int[] toCheck) {
-        for (int[] segment : snake) {
-            if (segment[ROW] == toCheck[ROW] && segment[COLUMN] == toCheck[COLUMN]) {
-                //collision
-                System.out.println("Collision!");
+    private boolean checkCollision(Coordinates toCheck) {
+        for (Coordinates coord : snake) {
+            if (toCheck.equals(coord)) {
                 return true;
             }
         }
         return false;
     }
 
-
     private void newApple() {
-        //generate random coordinates for new apple position,
-        // checking they don't collide with snake
-        int[] newApple;
         do {
-            newApple = new int[] {(int) (Math.random() * rows), (int) (Math.random() * columns)};
-        } while (collision(newApple));
-        //update apple
-        apple = newApple;
+            byte row = (byte) (Math.random() * ROWS);
+            byte column = (byte) (Math.random() * COLUMNS);
+            apple = new Coordinates(row, column);
+        } while (checkCollision(apple));
     }
 
-    /**
-     * Changes the snake head's direction to the one provided as long as it is valid.
-     * (e.g. cannot go from RIGHT to LEFT)
-     *
-     * @param newDirection
-     *              int describing new snake direction: RIGHT, DOWN, LEFT, UP (0,1,2,3)
-     */
-    public void setDirection(Direction newDirection) {
-        if (isNewDirectionValid(direction, newDirection)) {
+    public void changeDirection(Direction newDirection) {
+        if (direction.opposite != newDirection) {
             direction = newDirection;
         }
     }
 
-    /**
-     * Finds if the new direction is valid compared to the old one.
-     * The new direction must not be opposite to the old one.
-     *
-     * @param oldDirection
-     *                  The direction the snake is currently going
-     * @param newDirection
-     *                  The direction the snake wants to take now
-     * @return
-     *                  true if the new direction is valid and false otherwise
-     */
-    private boolean isNewDirectionValid(Direction oldDirection, Direction newDirection) {
-        return oldDirection.opposite != newDirection;
+    public Coordinates[] getSnake() {
+        return (Coordinates[]) snake.clone();
     }
-
-
-    /* -------------------- GETTERS -------------------- */
-
-    public int getRows() {
-        return rows;
-    }
-
-    public int getColumns() {
-        return columns;
-    }
-
-    public int[] getApple() {
-        return apple;
-    }
-
-    public LinkedList<int[]> getSnake() {
-        return snake;
-    }
-
-    public int[] getHead() {
-        return getSnake().getFirst();
-    }
-
-    public double getDelay() {
-        return delay;//todo move to getters
-    }
-
-    public void reset() {
-        direction = Direction.RIGHT;//default starting direction
-        delay = 500;//start with delay of 500 milliseconds
-
-        addSnake();
-        addApple();
-    }
-
-    /* -------------------- enum -------------------- */
 
     public enum Direction {
         RIGHT,
@@ -219,5 +118,104 @@ public class Model {
         public Direction getOpposite() {
             return opposite;
         }
+    }
+
+    static class Coordinates {
+        private byte[] coord;
+
+        public Coordinates(byte row, byte column) {
+            this(new byte[] {row, column});
+        }
+
+        public Coordinates(byte[] array) {
+            if (array.length != 2) {
+                /*throw new Exception*/
+                System.out.println("Cannot create Coordinates: int array must be of size two");
+            }
+            if (rowInvalid(array[0])) {
+                /*throw new Exception*/
+                System.out.println("Cannot create Coordinates: row must be between 0 and " + (Model.ROWS - 1));
+            } else if (columnInvalid(array[1])) {
+                /*throw new Exception*/
+                System.out.println("Cannot create Coordinates: column must be between 0 and " + (Model.COLUMNS-1));
+            }
+            coord = array.clone();
+        }
+
+        public Coordinates(Coordinates copy) {
+            coord = copy.coord;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Coordinates that = (Coordinates) o;
+
+            return Arrays.equals(coord, that.coord);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(coord);
+        }
+
+        public byte row() {
+            return coord[0];
+        }
+
+        public byte column() {
+            return coord[1];
+        }
+
+        public boolean setCoordinates(byte[] newCoords) {
+            if (newCoords.length != 2) return false;
+            return setCoordinates(newCoords[0], newCoords[1]);
+        }
+
+        /**
+         * Sets the coordinates to the provided bytes, if they are valid coords for the model.
+         * Returns if the coordinates are valid
+         *
+         * @param row
+         *          row coord to set this to
+         * @param column
+         *          column coord to set this to
+         * @return
+         *          true if coordinates are valid, false if not
+         */
+        public boolean setCoordinates(byte row, byte column) {
+            if (coordinatesInvalid(row, column)) {
+                return false;
+            }
+            coord = new byte[] {row, column};
+            return true;
+        }
+
+        public boolean setRow(byte row) {
+            return setCoordinates(row, coord[1]);
+        }
+
+        public boolean setColumn(byte column) {
+            return setCoordinates(coord[0], column);
+        }
+
+        private boolean coordinatesInvalid(byte[] coords) {
+            return rowInvalid(coords[0]) || columnInvalid(coords[1]) ;
+        }
+
+        private boolean coordinatesInvalid(byte row, byte column) {
+            return coordinatesInvalid(new byte[]{row, column});
+        }
+
+        private boolean columnInvalid(byte column) {
+            return column >= Model.COLUMNS || column < 0;
+        }
+
+        private boolean rowInvalid(byte row) {
+            return row >= Model.ROWS || row < 0;
+        }
+
     }
 }
