@@ -12,11 +12,12 @@ public class Contoller {
         this.stage = stage;
 
         model = new Model();
-        view = new View(model);
+        view = new View(model, stage);
+
    }
 
    public void launchGame() {
-
+        view.startTimeline();
    }
 
 }

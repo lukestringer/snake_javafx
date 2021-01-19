@@ -1,16 +1,19 @@
 package GUI;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 
 public class Model {
 
     private final static byte ROWS = 10;
     private final static byte COLUMNS = 10;
+    //todo add speed up
+    //private final static float difficulty =
 
     private LinkedList<Coordinates> snake;
+    private Coordinates justRemoved;//makes it easy to update view to track where tail just was
     private Coordinates apple;
     private Direction direction;
+
     private int gameSpeed;//milliseconds between moves
     private boolean justEaten;//did the snake eat an apple on the most recent move?
     private boolean collision;//did the snake collide on the most recent move?
@@ -31,28 +34,31 @@ public class Model {
             snake.addLast(new Coordinates((byte)(ROWS/2), (byte)(COLUMNS/2 - i)));
         }
         apple = new Coordinates((byte) (ROWS/2), (byte) (COLUMNS - 2));
-        gameSpeed = 1000;//set to 1000 milliseconds between snake movements
+        gameSpeed = 400;//set milliseconds between snake movements
         justEaten = false;
         collision = false;
     }
 
     public void moveSnake() {
-        Coordinates newHead = getNewHead();
+        Coordinates newHead = makeNewHead();
         justEaten = newHead.equals(apple);
         if (justEaten) {
             newApple();
+            justRemoved = null;
         } else {
-            snake.removeLast();
+            justRemoved = snake.removeLast();
         }
         collision = checkCollision(newHead);
-        if (!collision) {
-            snake.addFirst(newHead);
-        }
+        snake.addFirst(newHead);
     }
 
-    private Coordinates getNewHead() {
+    public Coordinates getHead() {
+        return new Coordinates(snake.getFirst().row(), snake.getFirst().column());
+    }
+
+    private Coordinates makeNewHead() {
         Coordinates oldHead = snake.getFirst();
-        Coordinates newHead = new Coordinates(oldHead);
+        Coordinates newHead = new Coordinates(oldHead.row(), oldHead.column());
         switch (direction) {
             case RIGHT:
                 newHead.setColumn((byte) ((oldHead.column() + 1) % COLUMNS));
@@ -96,8 +102,41 @@ public class Model {
         }
     }
 
-    public Coordinates[] getSnake() {
-        return (Coordinates[]) snake.clone();
+    public LinkedList<Coordinates> getSnake() {
+        LinkedList<Coordinates> copy = new LinkedList<>();
+        for (Coordinates snakeCoord : snake) {
+            copy.add(new Coordinates(snakeCoord.row(), snakeCoord.column()));
+        }
+        return copy;
+    }
+
+    public int maxRows() {
+        return ROWS;
+    }
+
+    public int maxColumns() {
+        return COLUMNS;
+    }
+
+    public Coordinates getApple() {
+        return new Coordinates(apple.row(), apple.column());
+    }
+
+    public int getGameSpeed() {
+        return gameSpeed;
+    }
+
+    public Coordinates getJustRemoved() {
+        if (justRemoved == null) return null;
+        return new Coordinates(justRemoved.row(), justRemoved.column());
+    }
+
+    public boolean isJustEaten() {
+        return justEaten;
+    }
+
+    public boolean getCollision() {
+        return collision;
     }
 
     public enum Direction {
@@ -121,29 +160,54 @@ public class Model {
     }
 
     static class Coordinates {
-        private byte[] coord;
+
+        private byte row;
+        private byte column;
 
         public Coordinates(byte row, byte column) {
-            this(new byte[] {row, column});
+            checkRow(row);
+            checkColumn(column);
+            this.row = row;
+            this.column = column;
         }
 
-        public Coordinates(byte[] array) {
-            if (array.length != 2) {
-                /*throw new Exception*/
-                System.out.println("Cannot create Coordinates: int array must be of size two");
+        private void checkRow(byte row) {
+            if (row >= Model.ROWS) {
+                throw new IllegalArgumentException("Row must be < " + Model.ROWS);
             }
-            if (rowInvalid(array[0])) {
-                /*throw new Exception*/
-                System.out.println("Cannot create Coordinates: row must be between 0 and " + (Model.ROWS - 1));
-            } else if (columnInvalid(array[1])) {
-                /*throw new Exception*/
-                System.out.println("Cannot create Coordinates: column must be between 0 and " + (Model.COLUMNS-1));
-            }
-            coord = array.clone();
         }
 
-        public Coordinates(Coordinates copy) {
-            coord = copy.coord;
+        private void checkColumn(byte column) {
+            if (column >= Model.COLUMNS) {
+                throw new IllegalArgumentException("Column must be < " + Model.COLUMNS);
+            }
+        }
+
+        public byte row() {
+            return row;
+        }
+
+        public byte column() {
+            return column;
+        }
+
+        public void setRow(byte row) {
+            checkRow(row);
+            this.row = row;
+        }
+
+        public void setColumn(byte column) {
+            checkColumn(column);
+            this.column = column;
+        }
+
+
+        @Override
+        public String toString() {
+            return "Coordinates{" +
+                    "row=" + row +
+                    ", column=" + column +
+                    '}';
         }
 
         @Override
@@ -153,69 +217,15 @@ public class Model {
 
             Coordinates that = (Coordinates) o;
 
-            return Arrays.equals(coord, that.coord);
+            if (row != that.row) return false;
+            return column == that.column;
         }
 
         @Override
         public int hashCode() {
-            return Arrays.hashCode(coord);
+            int result = row;
+            result = 31 * result + (int) column;
+            return result;
         }
-
-        public byte row() {
-            return coord[0];
-        }
-
-        public byte column() {
-            return coord[1];
-        }
-
-        public boolean setCoordinates(byte[] newCoords) {
-            if (newCoords.length != 2) return false;
-            return setCoordinates(newCoords[0], newCoords[1]);
-        }
-
-        /**
-         * Sets the coordinates to the provided bytes, if they are valid coords for the model.
-         * Returns if the coordinates are valid
-         *
-         * @param row
-         *          row coord to set this to
-         * @param column
-         *          column coord to set this to
-         * @return
-         *          true if coordinates are valid, false if not
-         */
-        public boolean setCoordinates(byte row, byte column) {
-            if (coordinatesInvalid(row, column)) {
-                return false;
-            }
-            coord = new byte[] {row, column};
-            return true;
-        }
-
-        public boolean setRow(byte row) {
-            return setCoordinates(row, coord[1]);
-        }
-
-        public boolean setColumn(byte column) {
-            return setCoordinates(coord[0], column);
-        }
-
-        private boolean coordinatesInvalid(byte[] coords) {
-            return rowInvalid(coords[0]) || columnInvalid(coords[1]) ;
-        }
-
-        private boolean coordinatesInvalid(byte row, byte column) {
-            return coordinatesInvalid(new byte[]{row, column});
-        }
-
-        private boolean columnInvalid(byte column) {
-            return column >= Model.COLUMNS || column < 0;
-        }
-
-        private boolean rowInvalid(byte row) {
-            return row >= Model.ROWS || row < 0;
-        }
-
     }
 }
