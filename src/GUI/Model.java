@@ -14,7 +14,8 @@ public class Model {
     private Coordinates apple;
     private Direction direction;
 
-    private int gameSpeed;//milliseconds between moves
+    private int moveDelay;//milliseconds between moves
+    private static final double SPEED_MODIFIER = 0.975;//reduce move delay by this factor
     private boolean justEaten;//did the snake eat an apple on the most recent move?
     private boolean collision;//did the snake collide on the most recent move?
 
@@ -34,7 +35,7 @@ public class Model {
             snake.addLast(new Coordinates((byte)(ROWS/2), (byte)(COLUMNS/2 - i)));
         }
         apple = new Coordinates((byte) (ROWS/2), (byte) (COLUMNS - 2));
-        gameSpeed = 400;//set milliseconds between snake movements
+        moveDelay = 400;//set milliseconds between snake movements
         justEaten = false;
         collision = false;
     }
@@ -45,6 +46,7 @@ public class Model {
         if (justEaten) {
             newApple();
             justRemoved = null;
+            moveDelay *= SPEED_MODIFIER;
         } else {
             justRemoved = snake.removeLast();
         }
@@ -122,8 +124,8 @@ public class Model {
         return new Coordinates(apple.row(), apple.column());
     }
 
-    public int getGameSpeed() {
-        return gameSpeed;
+    public int getMoveDelay() {
+        return moveDelay;
     }
 
     public Coordinates getJustRemoved() {

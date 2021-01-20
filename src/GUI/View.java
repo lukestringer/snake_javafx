@@ -21,11 +21,11 @@ public class View {
     private BorderPane root;
     private GridPane gameGrid;
     private HashMap<Model.Coordinates, Rectangle> gameSquares;
-    private Model model;
+    private final Model model;
     private Timeline timeline;
     private KeyEvent direction;
     private Scene scene;
-    private Stage stage;
+    private final Stage stage;
 
     private static final double GAME_WIDTH = 500;
     private static final double GAME_HEIGHT = 500;
@@ -37,8 +37,8 @@ public class View {
     private static final Color EMPTY_COLOUR = Color.BLACK;
     private static final Color APPLE_COLOUR = Color.RED;
     private static final Color DEAD_HEAD_COLOUR = Color.DARKGREEN;
-    private double squareWidth;
-    private double squareHeight;
+    private final double squareWidth;
+    private final double squareHeight;
 
     //todo make look like actual snake (change rectangle shapes based on direction)
 
@@ -81,7 +81,7 @@ public class View {
     }
 
     private void setupTimeline() {
-        Duration duration = Duration.millis(model.getGameSpeed());
+        Duration duration = Duration.millis(model.getMoveDelay());
         KeyFrame keyFrame = new KeyFrame(duration, new MoveActionHandler());
         timeline = new Timeline(keyFrame);
         timeline.setCycleCount(Animation.INDEFINITE);
@@ -153,6 +153,7 @@ public class View {
             }
             //update model and view to move snake
             model.moveSnake();
+            //---------------- move to controller ----------------//
             Model.Coordinates justRemoved = model.getJustRemoved();
             if (justRemoved != null) {
                 gameSquares.get(justRemoved).setFill(EMPTY_COLOUR);
@@ -166,6 +167,7 @@ public class View {
             } else {
                 gameSquares.get(model.getHead()).setFill(SNAKE_COLOUR);//
             }
+            //----------------------------------------------------//
         }
     }
 
