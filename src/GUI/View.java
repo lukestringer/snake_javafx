@@ -68,35 +68,6 @@ public class View {
 
     }
 
-    private void setupStage() {
-        stage.setTitle(TITLE);
-        stage.setScene(scene);
-        stage.setResizable(false);
-        stage.show();
-    }
-
-    private void setupScene() {
-        scene = new Scene(root, STAGE_WIDTH, STAGE_HEIGHT);//, Color.GREY);
-        scene.setOnKeyPressed(new DirectionActionHandler());
-    }
-
-    private void setupTimeline() {
-        Duration duration = Duration.millis(model.getMoveDelay());
-        KeyFrame keyFrame = new KeyFrame(duration, new MoveActionHandler());
-        timeline = new Timeline(keyFrame);
-        timeline.setCycleCount(Animation.INDEFINITE);
-    }
-
-    private void setupApple() {
-        gameSquares.get(model.getApple()).setFill(APPLE_COLOUR);
-    }
-
-    private void setupSnake() {
-        for (Model.Coordinates snakeCoord : model.getSnake()) {
-            gameSquares.get(snakeCoord).setFill(SNAKE_COLOUR);
-        }
-    }
-
     private void setupSquares() {
         gameSquares = new HashMap<>();
         for (byte column = 0; column < model.maxColumns(); column++) {
@@ -113,6 +84,35 @@ public class View {
                 gameGrid.add(square, column, row);
             }
         }
+    }
+
+    private void setupSnake() {
+        for (Model.Coordinates snakeCoord : model.getSnake()) {
+            gameSquares.get(snakeCoord).setFill(SNAKE_COLOUR);
+        }
+    }
+
+    private void setupApple() {
+        gameSquares.get(model.getApple()).setFill(APPLE_COLOUR);
+    }
+
+    private void setupTimeline() {
+        Duration duration = Duration.millis(model.getMoveDelay());
+        KeyFrame keyFrame = new KeyFrame(duration, new MoveActionHandler());
+        timeline = new Timeline(keyFrame);
+        timeline.setCycleCount(Animation.INDEFINITE);
+    }
+
+    private void setupScene() {
+        scene = new Scene(root, STAGE_WIDTH, STAGE_HEIGHT);//, Color.GREY);
+        scene.setOnKeyPressed(new DirectionActionHandler());
+    }
+
+    private void setupStage() {
+        stage.setTitle(TITLE);
+        stage.setScene(scene);
+        stage.setResizable(false);
+        stage.show();
     }
 
     private void resetGame() {
