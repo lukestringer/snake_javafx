@@ -1,6 +1,4 @@
-
 import javafx.application.Application;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -16,7 +14,7 @@ public class Main extends Application {
     }
 
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
 
 
 
@@ -27,8 +25,8 @@ public class Main extends Application {
         stage.show();
     }
 
-
     
+
 
 
 
