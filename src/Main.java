@@ -18,8 +18,15 @@ public class Main extends Application {
             SNAKE_SIZE = (int) (CELL_SIZE*0.5),
             EDGE_SIZE =  (CELL_SIZE - SNAKE_SIZE)/2 - 5;//size between snake and cell edge
     private static final Color SNAKE_COLOUR = Color.LAWNGREEN;
+    private static final Pos TOP = Pos.TOP_CENTER,
+            RIGHT = Pos.CENTER_RIGHT,
+            BOTTOM = Pos.BOTTOM_CENTER,
+            LEFT = Pos.CENTER_LEFT;
+    private static final Pos[] POSITIONS = {TOP, RIGHT, BOTTOM, LEFT};
+
 
     private StackPane root;
+    ///private List<List<StackPane>> cells;///
 
     public static void main(String[] args) {
         //launch sets up the application then calls start()
@@ -30,29 +37,18 @@ public class Main extends Application {
     public void start(Stage stage) {
 
 
+
+
         Scene scene = setupScene();
+
         stage.setScene(scene);
         stage.setResizable(false);
         stage.sizeToScene();//because set resizeable has a bug that adds padding
         stage.show();
 
-        //todo remove
-        StackPane cell0stack = (StackPane) getGrid().getChildren().get(0);
-        Rectangle test = new Rectangle(20, 20, SNAKE_SIZE, SNAKE_SIZE);
-        //tests.add(new Rectangle())
-        test.setFill(SNAKE_COLOUR);
-        cell0stack.getChildren().add(test);
-
-
-        Rectangle top = new Rectangle(SNAKE_SIZE, EDGE_SIZE);
-        top.setFill(Color.BLUE);
-        cell0stack.getChildren().add(top);
-
-        StackPane.setAlignment(top, Pos.TOP_CENTER);
-
     }
 
-    private StackPane getCellStackFromCoordinates(int x, int y) {
+    private StackPane getCellStack(int x, int y) {
         //NB: this method can break if the order of the cells within the grid is not right-to-left, top-to-bottom
         return (StackPane) getGrid().getChildren().get(x + y * NUM_CELLS);
     }
@@ -104,6 +100,8 @@ public class Main extends Application {
     }
 
     private StackPane setupGrid() {
+        ///cells = new ArrayList<>();///
+        ///for (int i = 0; i < CELL_SIZE; i++) cells.add(new ArrayList<>());///
 
         GridPane gridPane = new GridPane();
         StackPane gridStack = new StackPane(gridPane);
@@ -111,13 +109,41 @@ public class Main extends Application {
             for (int x = 0; x < NUM_CELLS; x ++) {
                 StackPane cellStack = makeCellStack(x,y);
                 gridPane.add(cellStack, x, y);
+                ///cells.get(y).add(x, cellStack);///
             }
         }
+
+        addSnakeToGrid();
+
         return gridStack;
+    }
+
+    private void addSnakeToGrid() {
+        //default starting positions
+        StackPane cell = getCellStack(1, NUM_CELLS/2);
+        addCenterToCell(cell);
+    }
+
+    private void addCenterToCell(StackPane cell) {
+        Rectangle rectangle = getCentreRectangle(cell);
+        rectangle.setFill(SNAKE_COLOUR);
+
+    }
+
+    private Rectangle getCentreRectangle(StackPane cell) {
+        for (Node child : cell.getChildren()) {
+            Rectangle rectangle = (Rectangle) child;
+            if (rectangle.getWidth() == SNAKE_SIZE) {//this is trash
+                return rectangle;
+            }
+        }
+        return (Rectangle) cell.getChildren().get(0);//also trash
     }
 
     private StackPane makeCellStack(int x, int y) {
         List<Rectangle> cellRectangles = makeCellRectangles(x, y);
+
+        ///cells.put(new int[] {x, y}, cellRectangles);///
 
         StackPane cellStack = new StackPane();
         cellStack.getChildren().addAll(cellRectangles);
@@ -130,7 +156,7 @@ public class Main extends Application {
         List<Rectangle> cellRectangles = new ArrayList<>();
         cellRectangles.add(makeCellBackgroundRectangle(x,y));
         cellRectangles.add(makeCentreRectangle());
-        for (Pos position : new Pos[] {Pos.TOP_CENTER, Pos.CENTER_RIGHT, Pos.BOTTOM_CENTER, Pos.CENTER_LEFT}) {
+        for (Pos position : POSITIONS) {
             cellRectangles.add(makeEdgeRectangle(position));
         }
         return cellRectangles;
@@ -139,13 +165,13 @@ public class Main extends Application {
     private Rectangle makeEdgeRectangle(Pos alignment) {
         Rectangle edge;
 
-        boolean topOrBottom = alignment == Pos.TOP_CENTER || alignment == Pos.BOTTOM_CENTER;
-        boolean rightOrLeft = alignment == Pos.CENTER_LEFT || alignment == Pos.CENTER_RIGHT;
+        boolean topOrBottom = alignment == TOP || alignment == BOTTOM;
+        boolean rightOrLeft = alignment == LEFT || alignment == RIGHT;
 
         if (topOrBottom) {
-            edge = new Rectangle(SNAKE_SIZE, EDGE_SIZE, SNAKE_COLOUR);
+            edge = new Rectangle(SNAKE_SIZE, EDGE_SIZE);
         } else if (rightOrLeft) {
-            edge = new Rectangle(EDGE_SIZE, SNAKE_SIZE, SNAKE_COLOUR);
+            edge = new Rectangle(EDGE_SIZE, SNAKE_SIZE);
         } else {
             System.out.println("Edge Rectangle given wrong alignment");
             return new Rectangle(CELL_SIZE, CELL_SIZE, Color.RED);
@@ -155,7 +181,7 @@ public class Main extends Application {
     }
 
     private Rectangle makeCentreRectangle() {
-        return new Rectangle(SNAKE_SIZE, SNAKE_SIZE, SNAKE_COLOUR);
+        return new Rectangle(SNAKE_SIZE, SNAKE_SIZE);
     }
 
     private Rectangle makeCellBackgroundRectangle(int x, int y) {
@@ -168,7 +194,6 @@ public class Main extends Application {
         }
         return background;
     }
-
 
     private GridPane getGrid() {
         //root:StackPane -> {borderPane -> {center -> {gridStack -> {gridPane -> {stackPane -> {rectangles}}}}, .
