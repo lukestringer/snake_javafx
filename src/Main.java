@@ -24,7 +24,7 @@ public class Main extends Application {
         stage.sizeToScene();//because set resizeable has a bug that adds padding
         stage.show();
     }
-    
+
 
 
 
