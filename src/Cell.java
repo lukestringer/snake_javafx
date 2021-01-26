@@ -12,7 +12,7 @@ import javafx.scene.shape.Rectangle;
 public class Cell {
 
     private static final Color SNAKE_COLOUR = Color.LAWNGREEN;
-    private static int CELL_SIZE = 0,
+    private static int CELL_SIZE = 0,//makes it clear their default is 0
             SNAKE_SIZE = 0,
             BORDER = 0;
 
@@ -57,17 +57,23 @@ public class Cell {
 
     private void setBackground() {
         double size = CELL_SIZE;
+        stackPane.setMaxSize(size, size);
         background = new Rectangle(0, 0, size, size);
+        stackPane.getChildren().add(background);
+        //checkerboard pattern
         if (x%2==0 && y%2==0 || x%2!=0 && y%2!=0) {
             background.setFill(Color.web("#292929"));
         } else {
             background.setFill(Color.web("#3b3b3b"));
         }
-        stackPane.setMaxSize(size, size);
     }
 
     private void addRectangle(Rectangle rectangle) {
         stackPane.getChildren().add(rectangle);
+    }
+
+    private void removeRectangle(Rectangle rectangle) {
+        stackPane.getChildren().remove(rectangle);
     }
 
     public void moveSnakeIn(Edge in) {
@@ -76,15 +82,20 @@ public class Cell {
         drawSnake();
     }
 
-    public void continueSnake(Edge out) {
+    public void moveSnakeOut(Edge out) {
         if (state != State.SNAKE) {
             throw new IllegalStateException("Can't continue snake if haven't used moveSnakeIn()");
+        } else if (out == snake.in) {
+            throw new IllegalArgumentException("Snake can't double back on itself (in cannot equal out)");
         }
         addRectangle(snake.goOut(out));
         drawSnake();
     }
 
     public void empty() {
+        removeRectangle(snake.in.rectangle);
+        removeRectangle(snake.out.rectangle);
+        removeRectangle(snake.head);
         state = State.EMPTY;
         snake = null;
     }
@@ -140,7 +151,6 @@ public class Cell {
         public final Rectangle rectangle;
 
         private Edge(Rectangle rectangle) {
-            System.out.println(rectangle);
             this.rectangle = rectangle;
         }
 
