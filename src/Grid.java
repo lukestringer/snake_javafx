@@ -8,6 +8,10 @@ public class Grid {
     private final GridPane gridPane;
     private final List<List<Cell>> cells;
 
+    public Grid(int size) {
+        this(size, size);
+    }
+
     public Grid(int width, int height) {
         gridPane = new GridPane();
         cells = new ArrayList<>();

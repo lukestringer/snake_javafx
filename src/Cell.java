@@ -6,6 +6,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Represents one cell in the game of snake. Tracks cell state and contents.
  * If cell is snake body part, tracks how snake moved through this cell.
@@ -23,8 +26,7 @@ public class Cell {
     private State state;
     private final int x, y;
 
-    private StackPane stackPane;
-    private Rectangle background;
+    private final StackPane stackPane;
     private Snake snake;
     private Circle apple;
 
@@ -61,7 +63,7 @@ public class Cell {
     private void setBackground() {
         double size = CELL_SIZE;
         stackPane.setMaxSize(size, size);
-        background = new Rectangle(0, 0, size, size);
+        Rectangle background = new Rectangle(0, 0, size, size);
         stackPane.getChildren().add(background);
         //checkerboard pattern
         if (x%2==0 && y%2==0 || x%2!=0 && y%2!=0) {
@@ -71,37 +73,40 @@ public class Cell {
         }
     }
 
-    private void addNode(Node node) {
+    private void addToCell(Node node) {
         stackPane.getChildren().add(node);
     }
 
-    private void removeNode(Node node) {
+    private void removeFromCell(Node node) {
         stackPane.getChildren().remove(node);
     }
 
-    public void moveSnakeIn(Edge in) {
-        if (state != State.EMPTY) throw new IllegalStateException("Cell must be empty() before snake can move in");
+    public void makeSnakeHead(Edge in) {
+        if (state != State.EMPTY) throw new IllegalStateException("Cell must be empty() before snake can move in.");
         state = State.SNAKE;
         snake = new Snake(in);
     }
 
-    public void moveSnakeOut(Edge out) {
+    public void makeSnakeBody(Edge out) {
+        if (state != State.SNAKE) throw new IllegalStateException("Need a snake before makeSnakeBody()");
+        snake.makeBody(out);
+    }
+
+    public void makeSnakeTail() {
         if (state != State.SNAKE) {
-            throw new IllegalStateException("Can't continue snake if haven't used moveSnakeIn()");
-        } else if (out == snake.in) {
-            throw new IllegalArgumentException("Snake can't double back on itself (in cannot equal out)");
+            throw new IllegalStateException("Can't make a snake tail if the cell doesn't have a snake yet.");
         }
-        addNode(snake.goOut(out));
+        snake.makeTail();
     }
 
     public void empty() {
         if (state == State.SNAKE) {
-            removeNode(snake.in.rectangle);
-            removeNode(snake.out.rectangle);
-            removeNode(snake.head);
+            if (snake.in != null) removeFromCell(snake.in);
+            if (snake.out != null) removeFromCell(snake.out);
+            removeFromCell(snake.head);
             snake = null;
         } else if (state == State.APPLE) {
-            removeNode(apple);
+            removeFromCell(apple);
             apple = null;
         }
         state = State.EMPTY;
@@ -112,7 +117,7 @@ public class Cell {
         if (state != State.EMPTY) throw new IllegalStateException("Cell must be empty() before putting apple in.");
         state = State.APPLE;
         apple = new Circle(APPLE_SIZE, APPLE_COLOUR);
-        addNode(apple);
+        addToCell(apple);
     }
 
     public Pane getStackPane() {
@@ -121,42 +126,77 @@ public class Cell {
 
 
     private class Snake {
-        Rectangle head;
-        Edge in, out;//edge that snake came in and went out on
-        // (both null if this isn't snake, out null if this is head of snake)
+        Rectangle head, in, out;//edge that snake came in and went out on
+        // ('out' is null if this is head of snake, neither null if body, 'in' is null if this is tail)
 
-        protected Snake(Edge in) {
-            this.in = in;
-            addNode(this.in.rectangle);
+        protected Snake(Edge inEdge) {
+            in = makeEdgeRectangle(inEdge);
+            addToCell(in);
             head = new Rectangle(BORDER, BORDER, SNAKE_SIZE, SNAKE_SIZE);
             head.setFill(Cell.SNAKE_COLOUR);
-            addNode(head);
+            addToCell(head);
         }
 
-        public Rectangle goOut(Edge edge) {
+        private Edge alignment(Rectangle rectangle) {
+            return Edge.forPos(StackPane.getAlignment(rectangle));
+        }
+
+        /**
+         * Turns the snake from a snake head to a snake body part, with in and out edges.
+         * @param outEdge
+         *          The edge of the rectangle for the snake head to leave the cell by
+         */
+        public void makeBody(Edge outEdge) {
             if (this.out != null) throw new IllegalStateException("Snake already has already gone out edge.");
-            this.out = edge;
-            return this.out.rectangle;
+            if (outEdge == alignment(in)) throw new IllegalArgumentException("Snake can't come in where it went out");
+            out = makeEdgeRectangle(outEdge);
+            addToCell(out);
+        }
+
+        /**
+         * Sets the edge the snake came in by to null, turning the snake into a tail
+         */
+        public void makeTail() {
+            if (this.out == null) throw new IllegalStateException("Need to call makeBody() before makeTail()");
+            removeFromCell(in);
+            in = null;
+        }
+
+        private Rectangle makeEdgeRectangle(Edge edge) {
+            //top and bottom are as wide as the snake and as high as the border
+            //left and right are as wide as the border and as high as the snake
+            double width = (edge == Edge.TOP || edge == Edge.BOTTOM) ? SNAKE_SIZE : BORDER;
+            double height = (edge == Edge.TOP || edge == Edge.BOTTOM) ? BORDER : SNAKE_SIZE;
+
+            Rectangle edgeRectangle = new Rectangle(width, height);
+            edgeRectangle.setFill(Cell.SNAKE_COLOUR);
+            StackPane.setAlignment(edgeRectangle, edge.alignment);
+            return edgeRectangle;
         }
     }
 
+
     enum Edge {
-        TOP(Edge.makeRectangle(SNAKE_SIZE, BORDER, Pos.TOP_CENTER)),
-        BOTTOM(Edge.makeRectangle(SNAKE_SIZE, BORDER, Pos.BOTTOM_CENTER)),
-        LEFT(Edge.makeRectangle(BORDER, SNAKE_SIZE, Pos.CENTER_LEFT)),
-        RIGHT(Edge.makeRectangle(BORDER, SNAKE_SIZE, Pos.CENTER_RIGHT));
+        TOP(Pos.TOP_CENTER),
+        BOTTOM(Pos.BOTTOM_CENTER),
+        LEFT(Pos.CENTER_LEFT),
+        RIGHT(Pos.CENTER_RIGHT);
 
-        public final Rectangle rectangle;
+        public final Pos alignment;
 
-        Edge(Rectangle rectangle) {
-            this.rectangle = rectangle;
+        Edge(Pos alignment) {
+            this.alignment = alignment;
         }
 
-        private static Rectangle makeRectangle(double width, double height, Pos alignment) {
-            Rectangle rectangle = new Rectangle(width, height);
-            rectangle.setFill(Cell.SNAKE_COLOUR);
-            StackPane.setAlignment(rectangle, alignment);
-            return rectangle;
+        static final Map<Pos, Edge> posToEdge = new HashMap<>();
+        static {
+            for (Edge e : values()) {
+                posToEdge.put(e.alignment, e);
+            }
+        }
+
+        public static Edge forPos(Pos pos) {
+            return posToEdge.get(pos);
         }
     }
 }
