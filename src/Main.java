@@ -13,30 +13,15 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
-        GridPane gridPane = new GridPane();
 
         Cell.setDimensions(60, 30, 20);
-        Cell cell = new Cell(0,0);
-        cell.moveSnakeIn(Cell.Edge.TOP);
-        cell.moveSnakeOut(Cell.Edge.RIGHT);
 
-        gridPane.add(cell.getStackPane(), 0, 0);
+        Grid grid = new Grid(10, 10);
 
-        Scene scene = new Scene(gridPane);
+        Scene scene = new Scene(grid.getGridPane());
         scene.setFill(Color.GREY);
 
         stage.setScene(scene);
         stage.show();
-
-        cell.empty();
-
-        cell.moveSnakeIn(Cell.Edge.LEFT);
-        cell.moveSnakeOut(Cell.Edge.BOTTOM);
-
-        //cell.empty();
-
-        cell.putApple();
-
-        //cell.empty();
     }
 }
