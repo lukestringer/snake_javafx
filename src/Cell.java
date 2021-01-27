@@ -1,7 +1,9 @@
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 /**
@@ -12,25 +14,24 @@ import javafx.scene.shape.Rectangle;
 public class Cell {
 
     private static final Color SNAKE_COLOUR = Color.LAWNGREEN;
+    private static final Color APPLE_COLOUR = Color.RED;
     private static int CELL_SIZE = 0,//makes it clear their default is 0
+            BORDER = 0,
             SNAKE_SIZE = 0,
-            BORDER = 0;
+            APPLE_SIZE = 0;
 
     private State state;
-    private int x, y;
+    private final int x, y;
 
     private StackPane stackPane;
     private Rectangle background;
     private Snake snake;
-
-    public Pane getStackPane() {
-        return stackPane;
-    }
+    private Circle apple;
 
     enum State {
         EMPTY,
         SNAKE,
-        APPLE;
+        APPLE
     }
 
     public Cell(int x, int y) {
@@ -44,15 +45,17 @@ public class Cell {
         setBackground();
     }
 
-    public static void setDimensions(int CELL_SIZE, int SNAKE_SIZE) {
-        if (SNAKE_SIZE > CELL_SIZE) {
-            throw new IllegalArgumentException("Snake size must be less or equal to cell size.");
-        } else if ( CELL_SIZE <= 0 || SNAKE_SIZE <= 0) {
-            throw new IllegalArgumentException("Cell and snake size must be greater than 0");
+    public static void setDimensions(int CELL_SIZE, int SNAKE_SIZE, int APPLE_SIZE) {
+        if (SNAKE_SIZE > CELL_SIZE || APPLE_SIZE > CELL_SIZE) {
+            throw new IllegalArgumentException("Snake and apple sizes must be less or equal to cell size.");
+        } else if ( CELL_SIZE <= 0 || SNAKE_SIZE <= 0 || APPLE_SIZE <= 0) {
+            throw new IllegalArgumentException("Sizes must be greater than 0");
         }
         Cell.CELL_SIZE = CELL_SIZE;
-        Cell.SNAKE_SIZE = SNAKE_SIZE;
         Cell.BORDER = (int) Math.ceil((CELL_SIZE - SNAKE_SIZE)/2.0);//ceil makes sure no gap of 1 pixel
+        Cell.SNAKE_SIZE = SNAKE_SIZE;
+        Cell.APPLE_SIZE = APPLE_SIZE;
+
     }
 
     private void setBackground() {
@@ -68,18 +71,18 @@ public class Cell {
         }
     }
 
-    private void addRectangle(Rectangle rectangle) {
-        stackPane.getChildren().add(rectangle);
+    private void addNode(Node node) {
+        stackPane.getChildren().add(node);
     }
 
-    private void removeRectangle(Rectangle rectangle) {
-        stackPane.getChildren().remove(rectangle);
+    private void removeNode(Node node) {
+        stackPane.getChildren().remove(node);
     }
 
     public void moveSnakeIn(Edge in) {
+        if (state != State.EMPTY) throw new IllegalStateException("Cell must be empty() before snake can move in");
         state = State.SNAKE;
         snake = new Snake(in);
-        drawSnake();
     }
 
     public void moveSnakeOut(Edge out) {
@@ -88,37 +91,32 @@ public class Cell {
         } else if (out == snake.in) {
             throw new IllegalArgumentException("Snake can't double back on itself (in cannot equal out)");
         }
-        addRectangle(snake.goOut(out));
-        drawSnake();
+        addNode(snake.goOut(out));
     }
 
     public void empty() {
-        removeRectangle(snake.in.rectangle);
-        removeRectangle(snake.out.rectangle);
-        removeRectangle(snake.head);
+        if (state == State.SNAKE) {
+            removeNode(snake.in.rectangle);
+            removeNode(snake.out.rectangle);
+            removeNode(snake.head);
+            snake = null;
+        } else if (state == State.APPLE) {
+            removeNode(apple);
+            apple = null;
+        }
         state = State.EMPTY;
-        snake = null;
-    }
-
-    private void drawSnake() {
 
     }
 
-
-    public int getX() {
-        return x;
+    public void putApple() {
+        if (state != State.EMPTY) throw new IllegalStateException("Cell must be empty() before putting apple in.");
+        state = State.APPLE;
+        apple = new Circle(APPLE_SIZE, APPLE_COLOUR);
+        addNode(apple);
     }
 
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public void setY(int y) {
-        this.y = y;
+    public Pane getStackPane() {
+        return stackPane;
     }
 
 
@@ -129,10 +127,10 @@ public class Cell {
 
         protected Snake(Edge in) {
             this.in = in;
-            addRectangle(this.in.rectangle);
+            addNode(this.in.rectangle);
             head = new Rectangle(BORDER, BORDER, SNAKE_SIZE, SNAKE_SIZE);
             head.setFill(Cell.SNAKE_COLOUR);
-            addRectangle(head);
+            addNode(head);
         }
 
         public Rectangle goOut(Edge edge) {
@@ -150,7 +148,7 @@ public class Cell {
 
         public final Rectangle rectangle;
 
-        private Edge(Rectangle rectangle) {
+        Edge(Rectangle rectangle) {
             this.rectangle = rectangle;
         }
 

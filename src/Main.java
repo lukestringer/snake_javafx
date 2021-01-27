@@ -15,7 +15,7 @@ public class Main extends Application {
     public void start(Stage stage) {
         GridPane gridPane = new GridPane();
 
-        Cell.setDimensions(60, 30);
+        Cell.setDimensions(60, 30, 20);
         Cell cell = new Cell(0,0);
         cell.moveSnakeIn(Cell.Edge.TOP);
         cell.moveSnakeOut(Cell.Edge.RIGHT);
@@ -33,5 +33,10 @@ public class Main extends Application {
         cell.moveSnakeIn(Cell.Edge.LEFT);
         cell.moveSnakeOut(Cell.Edge.BOTTOM);
 
+        //cell.empty();
+
+        cell.putApple();
+
+        //cell.empty();
     }
 }
