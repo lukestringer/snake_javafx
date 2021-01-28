@@ -18,10 +18,10 @@ public class Cell {
 
     private static final Color SNAKE_COLOUR = Color.LAWNGREEN;
     private static final Color APPLE_COLOUR = Color.RED;
-    private static int CELL_SIZE = 0,//makes it clear their default is 0
-            BORDER = 0,
-            SNAKE_SIZE = 0,
-            APPLE_SIZE = 0;
+    private static int cellSize = 0,//makes it clear their default is 0
+            edgeSize = 0,
+            snakeSize = 0,
+            appleSize = 0;
 
     private State state;
     private final int x, y;
@@ -30,6 +30,14 @@ public class Cell {
     private Snake snake;
     private Circle apple;
 
+    public boolean isApple() {
+        return state == State.APPLE;
+    }
+
+    public State getState() {
+        return state;
+    }
+
     enum State {
         EMPTY,
         SNAKE,
@@ -37,7 +45,7 @@ public class Cell {
     }
 
     public Cell(int x, int y) {
-        if (CELL_SIZE == 0 || SNAKE_SIZE == 0) {
+        if (cellSize == 0 || snakeSize == 0) {
             throw new IllegalStateException("Please use Cell.setDimensions() before making any cells.");
         }
         this.x = x;
@@ -47,21 +55,16 @@ public class Cell {
         setBackground();
     }
 
-    public static void setDimensions(int CELL_SIZE, int SNAKE_SIZE, int APPLE_SIZE) {
-        if (SNAKE_SIZE > CELL_SIZE || APPLE_SIZE > CELL_SIZE) {
-            throw new IllegalArgumentException("Snake and apple sizes must be less or equal to cell size.");
-        } else if ( CELL_SIZE <= 0 || SNAKE_SIZE <= 0 || APPLE_SIZE <= 0) {
-            throw new IllegalArgumentException("Sizes must be greater than 0");
-        }
-        Cell.CELL_SIZE = CELL_SIZE;
-        Cell.BORDER = (int) Math.ceil((CELL_SIZE - SNAKE_SIZE)/2.0);//ceil makes sure no gap of 1 pixel
-        Cell.SNAKE_SIZE = SNAKE_SIZE;
-        Cell.APPLE_SIZE = APPLE_SIZE;
-
+    public static void setDimensions(int CELL_SIZE) {
+        if ( CELL_SIZE <= 0) throw new IllegalArgumentException("Cell size must be greater than 0");
+        Cell.cellSize = CELL_SIZE;
+        Cell.snakeSize = CELL_SIZE/2;
+        Cell.appleSize = CELL_SIZE/3;
+        Cell.edgeSize = (int) Math.ceil((CELL_SIZE - snakeSize)/2.0);//ceil makes sure no gap of 1 pixel
     }
 
     private void setBackground() {
-        double size = CELL_SIZE;
+        double size = cellSize;
         stackPane.setMaxSize(size, size);
         Rectangle background = new Rectangle(0, 0, size, size);
         stackPane.getChildren().add(background);
@@ -116,7 +119,7 @@ public class Cell {
     public void putApple() {
         if (state != State.EMPTY) throw new IllegalStateException("Cell must be empty() before putting apple in.");
         state = State.APPLE;
-        apple = new Circle(APPLE_SIZE, APPLE_COLOUR);
+        apple = new Circle(appleSize, APPLE_COLOUR);
         addToCell(apple);
     }
 
@@ -124,6 +127,13 @@ public class Cell {
         return stackPane;
     }
 
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
 
     private class Snake {
         Rectangle head, in, out;//edge that snake came in and went out on
@@ -132,7 +142,7 @@ public class Cell {
         protected Snake(Edge inEdge) {
             in = makeEdgeRectangle(inEdge);
             addToCell(in);
-            head = new Rectangle(BORDER, BORDER, SNAKE_SIZE, SNAKE_SIZE);
+            head = new Rectangle(edgeSize, edgeSize, snakeSize, snakeSize);
             head.setFill(Cell.SNAKE_COLOUR);
             addToCell(head);
         }
@@ -165,8 +175,8 @@ public class Cell {
         private Rectangle makeEdgeRectangle(Edge edge) {
             //top and bottom are as wide as the snake and as high as the border
             //left and right are as wide as the border and as high as the snake
-            double width = (edge == Edge.TOP || edge == Edge.BOTTOM) ? SNAKE_SIZE : BORDER;
-            double height = (edge == Edge.TOP || edge == Edge.BOTTOM) ? BORDER : SNAKE_SIZE;
+            double width = (edge == Edge.TOP || edge == Edge.BOTTOM) ? snakeSize : edgeSize;
+            double height = (edge == Edge.TOP || edge == Edge.BOTTOM) ? edgeSize : snakeSize;
 
             Rectangle edgeRectangle = new Rectangle(width, height);
             edgeRectangle.setFill(Cell.SNAKE_COLOUR);
@@ -188,15 +198,25 @@ public class Cell {
             this.alignment = alignment;
         }
 
+
         static final Map<Pos, Edge> posToEdge = new HashMap<>();
+        private Edge opposite;
         static {
             for (Edge e : values()) {
                 posToEdge.put(e.alignment, e);
             }
+            TOP.opposite = BOTTOM;
+            BOTTOM.opposite = TOP;
+            RIGHT.opposite = LEFT;
+            LEFT.opposite = RIGHT;
         }
 
         public static Edge forPos(Pos pos) {
             return posToEdge.get(pos);
+        }
+
+        public Edge getOpposite() {
+            return opposite;
         }
     }
 }
