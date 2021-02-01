@@ -13,14 +13,17 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) {
 
-        Grid grid = new Grid(10, 60);
+        Grid grid = new Grid(10, 80);
         GameLoop gameLoop = new GameLoop(grid);
 
 
         Scene scene = new Scene(gameLoop.getRoot());
         scene.setFill(Color.GREY);
+        gameLoop.setHandler(scene);
 
         stage.setScene(scene);
         stage.show();
     }
+
+
 }

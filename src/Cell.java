@@ -88,6 +88,7 @@ public class Cell {
         if (state != State.EMPTY) throw new IllegalStateException("Cell must be empty() before snake can move in.");
         state = State.SNAKE;
         snake = new Snake(in);
+        snake.makeHead();
     }
 
     public void makeSnakeBody(Edge out) {
@@ -139,9 +140,13 @@ public class Cell {
         Rectangle head, in, out;//edge that snake came in and went out on
         // ('out' is null if this is head of snake, neither null if body, 'in' is null if this is tail)
 
-        protected Snake(Edge inEdge) {
+        public Snake(Edge inEdge) {
             in = makeEdgeRectangle(inEdge);
             addToCell(in);
+        }
+
+        public void makeHead() {
+            if (head != null) throw new IllegalStateException("Remove second call to make head (only need 1)");
             head = new Rectangle(edgeSize, edgeSize, snakeSize, snakeSize);
             head.setFill(Cell.SNAKE_COLOUR);
             addToCell(head);
@@ -157,6 +162,7 @@ public class Cell {
          *          The edge of the rectangle for the snake head to leave the cell by
          */
         public void makeBody(Edge outEdge) {
+            if (this.head == null) throw new IllegalStateException("Must makeHead() before making body.");
             if (this.out != null) throw new IllegalStateException("Snake already has already gone out edge.");
             if (outEdge == alignment(in)) throw new IllegalArgumentException("Snake can't come in where it went out");
             out = makeEdgeRectangle(outEdge);

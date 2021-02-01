@@ -79,8 +79,26 @@ public class Grid {
         apple.putApple();
     }
 
+    private void moveApple() {
+        boolean collision = true;
+        do {
+            int x = (int) (Math.random() * cellsPerSide);
+            int y = (int) (Math.random() * cellsPerSide);
+            System.out.println("x,y:"+x+","+y);
+            Cell newApple = getCell(x,y);
+            if (newApple.getState() == Cell.State.EMPTY) {
+                collision = false;
+                apple.empty();
+                apple = getCell(x,y);
+                apple.putApple();
+            }
+
+        } while (collision);
+    }
+
     public void moveSnake(Cell.Edge direction) {
-        Cell neighbour = getNeighbour(snake.getFirst(), direction);
+        Cell head = snake.getFirst();
+        Cell neighbour = getNeighbour(head, direction);
         if (neighbour == null) {
             //hit edge of board
         } else {
@@ -96,6 +114,10 @@ public class Grid {
                 case SNAKE:
                     break;
                 case APPLE:
+                    moveApple();
+                    snake.getFirst().makeSnakeBody(direction);
+                    neighbour.makeSnakeHead(direction.getOpposite());
+                    snake.addFirst(neighbour);
                     break;
             }
         }
